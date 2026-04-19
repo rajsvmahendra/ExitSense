@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">ExitSense</string>
+    <!-- Replace with your actual web client ID from Firebase Console -->
+    <string name="default_web_client_id">484963859939-lgrs1glnn9t37m8j0jeb3h6g75rnshms.apps.googleusercontent.com</string>
+</resources>

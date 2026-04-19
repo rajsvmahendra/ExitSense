@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "484963859939",
+    "project_id": "exitsense-545c8a7d",
+    "storage_bucket": "exitsense-545c8a7d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:484963859939:android:fa610353e1371bc43ff4d6",
+        "android_client_info": {
+          "package_name": "com.rajsv.exitsense"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "484963859939-lgrs1glnn9t37m8j0jeb3h6g75rnshms.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyACiVRzn_zvczhRus3SEkcJuDZLM8SlPUk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "484963859939-lgrs1glnn9t37m8j0jeb3h6g75rnshms.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

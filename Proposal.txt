@@ -1,0 +1,230 @@
+Roll No.: 12
+
+Registration No.: 12324668
+
+Name of Student: Rajsv Mahendra
+
+Contact No.: 9026105513
+
+Project Title: ExitSense – Smart Reminders Before You Leave
+
+Brief Explanation of the Proposed Implementation:
+ExitSense is an Android application developed using Kotlin and Jetpack Compose that reminds users about important items before they leave a location such as home, hostel, college, or library. The user can save items like ID card, charger, lab file, wallet, and water bottle along with the days, time, and location where they are needed. The application uses location services, WorkManager, notifications, and reminder scheduling to detect when the user is leaving a saved place and then displays a smart reminder. The app will include features such as navigation drawer, tabs, history tracking, custom UI components, runtime permissions, DataStore settings, and notification channels. It will also maintain a history of forgotten items and suggest reminders based on the user’s habits.
+
+
+Tagline:
+“Smart reminders before you leave.”
+
+Now the final roadmap.
+
+ExitSense – Final Roadmap
+Phase 1: Project Setup
+
+Goal: Build the base app structure.
+
+Create new Android Studio project
+Kotlin + Jetpack Compose + Material 3
+Single Activity architecture
+Add Navigation Compose
+Create basic theme and colors
+Create empty screens:
+Splash
+Home
+Items
+Locations
+History
+Settings
+
+Result:
+The skeleton of the app exists.
+
+Phase 2: Navigation + Layout
+
+Goal: Complete CO3 and CO6 early.
+
+Features:
+
+Navigation Drawer
+Top App Bar
+Bottom/Tab navigation on Home
+HorizontalPager with:
+Today
+Upcoming
+History
+
+Screen Flow:
+
+Splash → Home
+
+Drawer:
+
+Home
+My Items
+Locations
+Reminder History
+Settings
+
+Result:
+App already looks like a real project, even before logic is added.
+
+Phase 3: Item Management
+
+Goal: User can save important things.
+
+Create item form:
+
+Item name
+Select icon/image
+Choose location
+Choose day(s)
+Set importance level
+Optional reminder time
+
+Examples:
+
+ID Card → Weekdays
+Lab File → Thursday
+Charger → When battery low
+
+Use:
+
+Room Database
+DatePicker
+TimePicker
+LazyColumn / Grid
+
+Result:
+User can fully manage reminders.
+
+Phase 4: Location System
+
+Goal: User saves important places.
+
+User adds:
+
+Hostel
+Home
+College
+Library
+
+Features:
+
+Get current location
+Save name + radius
+View in list
+
+Use:
+
+Runtime permission
+Location Services
+Google Maps or simple latitude storage
+
+Result:
+App knows where the user is leaving from.
+
+Phase 5: Smart Reminder Logic
+
+This is the soul of the app.
+
+When:
+
+User exits a location
+Day matches saved day
+Time matches reminder time
+Battery low condition is true
+
+Then:
+Show notification
+
+Example:
+“You are leaving Hostel.
+Do not forget:
+
+ID Card
+Charger
+Lab File”
+
+Use:
+
+WorkManager
+Notification Channels
+PendingIntent
+Intents
+
+Result:
+The app finally becomes “smart.”
+
+Phase 6: History + Learning
+
+Goal: Make it feel intelligent.
+
+Whenever reminder shown:
+
+Save in history
+User taps:
+Took it
+Forgot it
+Ignore
+
+Then app learns:
+“You often forget charger on Mondays.”
+
+Use:
+
+Room database history table
+Simple frequency logic
+
+No AI needed. Just patterns. Old habits leave deep footprints.
+
+Phase 7: Settings + DataStore
+
+Features:
+
+Dark mode
+Notification on/off
+Change reminder frequency
+Change language later if needed
+
+Use:
+
+Preferences DataStore
+
+Result:
+CO5 completed.
+
+Final Feature List for Viva
+
+You can proudly say your app includes:
+
+Jetpack Compose UI
+Material 3
+Custom Composables
+Navigation Drawer
+HorizontalPager + Tabs
+Splash Screen
+Lazy Lists / Grids
+Room Database
+WorkManager
+Notification Channels
+PendingIntent + Intents
+DatePicker + TimePicker
+
+Runtime Permissions
+DataStore
+Single Activity Navigation
+
+That covers nearly your entire syllabus in one app. A neat harvest from one field instead of planting ten tiny crops.
+
+Recommended order to build:
+
+Project setup
+Navigation
+Items screen
+Locations screen
+Room database
+Reminder logic
+Notifications
+History
+Settings
+Final polish
+
