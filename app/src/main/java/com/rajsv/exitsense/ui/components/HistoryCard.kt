@@ -49,7 +49,6 @@ import com.rajsv.exitsense.ui.theme.ExitSenseTypography
 import com.rajsv.exitsense.ui.theme.StatusError
 import com.rajsv.exitsense.ui.theme.StatusSuccess
 import com.rajsv.exitsense.ui.theme.StatusWarning
-import kotlinx.coroutines.delay
 
 @Composable
 fun HistoryCard(

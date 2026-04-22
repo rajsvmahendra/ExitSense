@@ -30,7 +30,7 @@ fun NavGraph(
     startDestination: String = Screen.Splash.route
 ) {
     val context = LocalContext.current
-    val isLoggedIn by UserDataStore.isLoggedIn(context).collectAsState(initial = false)
+    val isLoggedIn by UserDataStore.isLoggedIn(context).collectAsState(initial = null)
 
     NavHost(
         navController = navController,
@@ -44,10 +44,12 @@ fun NavGraph(
         composable(route = Screen.Splash.route) {
             SplashScreen(
                 onNavigateToHome = {
-                    // Check if user is logged in
-                    val destination = if (isLoggedIn) Screen.Home.route else Screen.Login.route
-                    navController.navigate(destination) {
-                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    // Only navigate if login state is determined (not null)
+                    isLoggedIn?.let { loggedIn ->
+                        val destination = if (loggedIn) Screen.Home.route else Screen.Login.route
+                        navController.navigate(destination) {
+                            popUpTo(Screen.Splash.route) { inclusive = true }
+                        }
                     }
                 }
             )

@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Geocoder
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -33,12 +34,14 @@ import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Place
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -66,10 +69,9 @@ import com.rajsv.exitsense.ui.components.GradientCard
 import com.rajsv.exitsense.ui.components.LocationCard
 import com.rajsv.exitsense.ui.components.PremiumChip
 import com.rajsv.exitsense.ui.components.PremiumFAB
-import com.rajsv.exitsense.ui.components.PremiumTextField
+import com.rajsv.exitsense.ui.components.SearchBar
 import com.rajsv.exitsense.ui.theme.AccentPrimary
 import com.rajsv.exitsense.ui.theme.AccentSecondary
-import com.rajsv.exitsense.ui.theme.ExitSenseTheme
 import com.rajsv.exitsense.ui.theme.ExitSenseTypography
 import com.rajsv.exitsense.ui.theme.GradientEnd
 import com.rajsv.exitsense.ui.theme.GradientMiddle
@@ -92,6 +94,7 @@ fun LocationsScreen(
     // GPS states
     var isDetectingLocation by remember { mutableStateOf(false) }
     var currentLocationText by remember { mutableStateOf<String?>(null) }
+    var showBackgroundPermissionDialog by remember { mutableStateOf(false) }
 
     // Get real locations from repository
     val locations by LocationsRepository.getLocations(context).collectAsState(initial = emptyList())
@@ -103,6 +106,17 @@ fun LocationsScreen(
     }
     val activeLocationsCount = locations.count { it.isActive }
 
+    // Background Permission Launcher
+    val backgroundPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            Toast.makeText(context, "Background location access granted", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "Background location access denied. Some features may not work.", Toast.LENGTH_LONG).show()
+        }
+    }
+
     // Permission launcher
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -111,9 +125,20 @@ fun LocationsScreen(
         val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
 
         if (fineLocationGranted || coarseLocationGranted) {
+            // Check for background location if on Android 10+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val backgroundGranted = ContextCompat.checkSelfPermission(
+                    context, Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+
+                if (!backgroundGranted) {
+                    showBackgroundPermissionDialog = true
+                }
+            }
+
             detectCurrentLocation(
                 context = context,
-                onLocationDetected = { lat, lng, address ->
+                onLocationDetected = { _, _, address ->
                     isDetectingLocation = false
                     currentLocationText = address
                     Toast.makeText(context, "Location: $address", Toast.LENGTH_LONG).show()
@@ -127,6 +152,29 @@ fun LocationsScreen(
             isDetectingLocation = false
             Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    if (showBackgroundPermissionDialog) {
+        AlertDialog(
+            onDismissRequest = { showBackgroundPermissionDialog = false },
+            title = { Text("Background Location Access") },
+            text = { Text("ExitSense needs background location access to remind you when you leave a place, even when the app is closed. Please select 'Allow all the time' in the next screen.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showBackgroundPermissionDialog = false
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        backgroundPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                    }
+                }) {
+                    Text("Grant")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showBackgroundPermissionDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     // Function to handle location detection
@@ -144,7 +192,7 @@ fun LocationsScreen(
             coarseLocationPermission == PackageManager.PERMISSION_GRANTED) {
             detectCurrentLocation(
                 context = context,
-                onLocationDetected = { lat, lng, address ->
+                onLocationDetected = { _, _, address ->
                     isDetectingLocation = false
                     currentLocationText = address
                     Toast.makeText(context, "Location: $address", Toast.LENGTH_LONG).show()
@@ -210,15 +258,12 @@ fun LocationsScreen(
                         enter = fadeIn(tween(500, delayMillis = 50)) +
                                 slideInVertically(tween(500, delayMillis = 50)) { 30 }
                     ) {
-                        Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
-                            PremiumTextField(
-                                value = searchQuery,
-                                onValueChange = { searchQuery = it },
-                                placeholder = "Search places...",
-                                leadingIcon = Icons.Outlined.Search,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
+                        SearchBar(
+                            query = searchQuery,
+                            onQueryChange = { searchQuery = it },
+                            placeholder = "Search places...",
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                        )
                     }
                 }
             }

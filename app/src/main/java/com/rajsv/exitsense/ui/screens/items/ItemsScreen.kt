@@ -58,6 +58,7 @@ import com.rajsv.exitsense.ui.components.ItemCard
 import com.rajsv.exitsense.ui.components.PremiumChip
 import com.rajsv.exitsense.ui.components.PremiumFAB
 import com.rajsv.exitsense.ui.components.PremiumTextField
+import com.rajsv.exitsense.ui.components.SearchBar
 import com.rajsv.exitsense.ui.components.SmallFAB
 import com.rajsv.exitsense.ui.theme.AccentPrimary
 import com.rajsv.exitsense.ui.theme.AccentSecondary
@@ -147,6 +148,7 @@ fun ItemsScreen(
                     SearchBar(
                         query = searchQuery,
                         onQueryChange = { searchQuery = it },
+                        placeholder = "Search items...",
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
                     )
                 }
@@ -290,36 +292,6 @@ private fun ItemsHeader(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun SearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        PremiumTextField(
-            value = query,
-            onValueChange = onQueryChange,
-            placeholder = "Search items...",
-            leadingIcon = Icons.Outlined.Search,
-            modifier = Modifier.weight(1f)
-        )
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        SmallFAB(
-            onClick = { /* Show filter dialog */ },
-            icon = Icons.Outlined.FilterList,
-            backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
-            iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
-            size = 52.dp
-        )
     }
 }
 

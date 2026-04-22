@@ -25,6 +25,10 @@ class LoginViewModel(private val authRepository: AuthRepository) : ViewModel() {
         }
     }
 
+    fun resetState() {
+        _uiState.value = LoginUiState.Idle
+    }
+
     fun getGoogleSignInClient() = authRepository.getGoogleSignInClient()
 }
 

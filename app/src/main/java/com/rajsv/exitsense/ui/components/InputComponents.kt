@@ -8,7 +8,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,7 +21,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
@@ -35,134 +33,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import com.rajsv.exitsense.ui.theme.ExitSenseTheme
 import com.rajsv.exitsense.ui.theme.ExitSenseTypography
-
-@Composable
-fun PremiumTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    label: String = "",
-    placeholder: String = "",
-    leadingIcon: ImageVector? = null,
-    trailingIcon: @Composable (() -> Unit)? = null,
-    isError: Boolean = false,
-    errorMessage: String? = null,
-    singleLine: Boolean = true,
-    maxLines: Int = 1,
-    isPassword: Boolean = false,
-    passwordVisible: Boolean = false
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
-    val colorScheme = MaterialTheme.colorScheme
-
-    val borderColor by animateColorAsState(
-        targetValue = when {
-            isError -> colorScheme.error
-            isFocused -> colorScheme.primary
-            else -> colorScheme.outline.copy(alpha = 0.3f)
-        },
-        animationSpec = tween(durationMillis = 200),
-        label = "border_color"
-    )
-
-    val backgroundColor by animateColorAsState(
-        targetValue = if (isFocused) colorScheme.surfaceVariant else colorScheme.primaryContainer,
-        animationSpec = tween(durationMillis = 200),
-        label = "background_color"
-    )
-
-    val shape = RoundedCornerShape(16.dp)
-
-    val visualTransformation = if (isPassword && !passwordVisible) {
-        PasswordVisualTransformation()
-    } else {
-        VisualTransformation.None
-    }
-
-    Column(modifier = modifier.fillMaxWidth()) {
-        if (label.isNotEmpty()) {
-            Text(
-                text = label,
-                style = ExitSenseTypography.labelMedium,
-                fontWeight = FontWeight.Medium,
-                color = if (isFocused) colorScheme.primary else colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
-            )
-        }
-
-        BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(shape)
-                .background(backgroundColor)
-                .border(
-                    width = 1.5.dp,
-                    color = borderColor,
-                    shape = shape
-                )
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            textStyle = ExitSenseTypography.bodyLarge.copy(color = colorScheme.onBackground),
-            cursorBrush = SolidColor(colorScheme.primary),
-            singleLine = singleLine,
-            maxLines = maxLines,
-            interactionSource = interactionSource,
-            visualTransformation = visualTransformation,
-            decorationBox = { innerTextField ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (leadingIcon != null) {
-                        Icon(
-                            imageVector = leadingIcon,
-                            contentDescription = null,
-                            tint = if (isFocused) colorScheme.primary else colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                    }
-
-                    Box(modifier = Modifier.weight(1f)) {
-                        if (value.isEmpty()) {
-                            Text(
-                                text = placeholder,
-                                style = ExitSenseTypography.bodyLarge,
-                                color = colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                            )
-                        }
-                        innerTextField()
-                    }
-
-                    if (trailingIcon != null) {
-                        Spacer(modifier = Modifier.width(12.dp))
-                        trailingIcon()
-                    }
-                }
-            }
-        )
-
-        if (isError && errorMessage != null) {
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = errorMessage,
-                style = ExitSenseTypography.bodySmall,
-                color = colorScheme.error,
-                modifier = Modifier.padding(start = 4.dp)
-            )
-        }
-    }
-}
 
 @Composable
 fun PremiumChip(

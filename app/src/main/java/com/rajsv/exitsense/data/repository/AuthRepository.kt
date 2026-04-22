@@ -14,13 +14,16 @@ import kotlinx.coroutines.tasks.await
 class AuthRepository(private val context: Context) {
     private val firebaseAuth = FirebaseAuth.getInstance()
 
-    fun getGoogleSignInClient(): GoogleSignInClient {
+    private val _googleSignInClient by lazy {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(context.getString(R.string.default_web_client_id))
             .requestEmail()
+            .requestProfile()
             .build()
-        return GoogleSignIn.getClient(context, gso)
+        GoogleSignIn.getClient(context, gso)
     }
+
+    fun getGoogleSignInClient(): GoogleSignInClient = _googleSignInClient
 
     suspend fun signInWithGoogle(idToken: String): Result<Unit> {
         return try {

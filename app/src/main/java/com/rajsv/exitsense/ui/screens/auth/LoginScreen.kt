@@ -42,6 +42,7 @@ import com.rajsv.exitsense.ui.components.PremiumTextField
 import com.rajsv.exitsense.ui.components.SecondaryButton
 import com.rajsv.exitsense.ui.theme.*
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @Composable
@@ -79,16 +80,37 @@ fun LoginScreen(
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
             try {
                 val account = task.getResult(ApiException::class.java)
-                account.idToken?.let { viewModel.signInWithGoogle(it) }
+                val idToken = account.idToken
+                if (idToken != null) {
+                    viewModel.signInWithGoogle(idToken)
+                } else {
+                    Toast.makeText(context, "Google login failed: ID Token is null", Toast.LENGTH_SHORT).show()
+                    viewModel.resetState()
+                }
             } catch (e: ApiException) {
-                Toast.makeText(context, "Google sign in failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                val message = when (e.statusCode) {
+                    10 -> "Configuration error (Developer Error 10). Check SHA-1 or Web Client ID."
+                    12500 -> "Firebase configuration issue (12500). Verify google-services.json."
+                    else -> "Google sign in failed: ${e.message}"
+                }
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                viewModel.resetState()
             }
+        } else if (result.resultCode == Activity.RESULT_CANCELED) {
+            viewModel.resetState()
+        } else {
+            Toast.makeText(context, "Sign in cancelled", Toast.LENGTH_SHORT).show()
+            viewModel.resetState()
         }
     }
 
     LaunchedEffect(uiState) {
         if (uiState is LoginUiState.Success) {
-            onLoginSuccess()
+            scope.launch {
+                val userName = UserDataStore.getUserName(context).first()
+                NotificationHelper.showWelcomeNotification(context, userName)
+                onLoginSuccess()
+            }
         } else if (uiState is LoginUiState.Error) {
             Toast.makeText(context, (uiState as LoginUiState.Error).message, Toast.LENGTH_SHORT).show()
         }
@@ -183,6 +205,7 @@ fun LoginScreen(
                 onClick = {
                     scope.launch {
                         UserDataStore.login(context, "Guest", "guest@exitsense.app")
+                        NotificationHelper.showWelcomeNotification(context, "Guest")
                         onLoginSuccess()
                     }
                 }
