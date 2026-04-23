@@ -23,12 +23,14 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -196,6 +198,7 @@ fun HistoryScreen(
 
                     AnimatedVisibility(
                         visible = showContent,
+                        modifier = Modifier.animateItem(),
                         enter = fadeIn(tween(400, delayMillis = 250 + (index * 50))) +
                                 slideInVertically(tween(400, delayMillis = 250 + (index * 50))) { 30 }
                     ) {
@@ -244,7 +247,7 @@ private fun HistoryHeader() {
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "History",
                     style = ExitSenseTypography.headlineLarge,
@@ -256,6 +259,17 @@ private fun HistoryHeader() {
                     text = "Your reminder activity",
                     style = ExitSenseTypography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            IconButton(
+                onClick = { /* TODO: Clear History */ },
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.DeleteOutline,
+                    contentDescription = "Clear History",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -273,6 +287,9 @@ private fun StatsCard(
     GradientCard(
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
         gradientColors = listOf(GradientStart, GradientMiddle, GradientEnd),
+        brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
+            colors = listOf(GradientStart, GradientMiddle, GradientEnd)
+        ),
         cornerRadius = 24.dp,
         contentPadding = 20.dp
     ) {
@@ -401,11 +418,12 @@ private fun FilterChipsRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.padding(vertical = 12.dp)
     ) {
-        itemsIndexed(filters) { index, filter ->
+        itemsIndexed(filters, key = { _, filter -> filter }) { index, filter ->
             PremiumChip(
                 text = filter,
                 isSelected = selectedIndex == index,
-                onClick = { onFilterSelected(index) }
+                onClick = { onFilterSelected(index) },
+                modifier = Modifier.animateItem()
             )
         }
     }

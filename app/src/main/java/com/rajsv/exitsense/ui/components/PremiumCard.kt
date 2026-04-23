@@ -92,6 +92,7 @@ fun GradientCard(
     cornerRadius: Dp = 24.dp,
     enablePressAnimation: Boolean = true,
     contentPadding: Dp = 20.dp,
+    brush: androidx.compose.ui.graphics.Brush? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -117,7 +118,7 @@ fun GradientCard(
             )
             .clip(shape)
             .background(
-                brush = Brush.linearGradient(colors = gradientColors)
+                brush = brush ?: Brush.linearGradient(colors = gradientColors)
             )
             .then(
                 if (onClick != null) {

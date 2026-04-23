@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.DarkMode
@@ -1344,7 +1345,7 @@ private fun RateAppDialog(
                 ) {
                     (1..5).forEach { star ->
                         Icon(
-                            imageVector = Icons.Outlined.Star,
+                            imageVector = if (star <= selectedRating) Icons.Filled.Star else Icons.Outlined.Star,
                             contentDescription = "Star $star",
                             tint = if (star <= selectedRating) AccentSecondary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
                             modifier = Modifier

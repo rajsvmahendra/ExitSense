@@ -102,96 +102,116 @@ fun HomeScreen(
         },
         floatingActionButtonPosition = FabPosition.End
     ) { paddingValues ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(bottom = 100.dp)
+                .padding(paddingValues)
         ) {
-            item {
-                AnimatedVisibility(
-                    visible = showContent,
-                    enter = fadeIn(tween(500)) + slideInVertically(tween(500)) { -50 }
-                ) {
-                    HomeHeader()
-                }
-            }
-
-            item {
-                AnimatedVisibility(
-                    visible = showContent,
-                    enter = fadeIn(tween(600, delayMillis = 100)) +
-                            slideInVertically(tween(600, delayMillis = 100)) { 50 }
-                ) {
-                    if (allItems.isEmpty()) {
-                        EmptyStateCard(
-                            onAddItem = { navController.navigate(Screen.AddItem.route) }
-                        )
-                    } else if (todayEssentials.isNotEmpty()) {
-                        TodayEssentialsCard(
-                            items = todayEssentials,
-                            onViewAll = { navController.navigate(Screen.Items.route) }
-                        )
-                    }
-                }
-            }
-
-            if (allItems.isNotEmpty()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 100.dp)
+            ) {
                 item {
                     AnimatedVisibility(
                         visible = showContent,
-                        enter = fadeIn(tween(600, delayMillis = 200)) +
-                                slideInVertically(tween(600, delayMillis = 200)) { 50 }
+                        enter = fadeIn(tween(500)) + slideInVertically(tween(500)) { -50 }
                     ) {
-                        SectionHeader(
-                            title = "Quick Reminders",
-                            onViewAll = { navController.navigate(Screen.Items.route) }
-                        )
+                        HomeHeader()
                     }
                 }
 
                 item {
                     AnimatedVisibility(
                         visible = showContent,
-                        enter = fadeIn(tween(600, delayMillis = 250))
+                        enter = fadeIn(tween(600, delayMillis = 100)) +
+                                slideInVertically(tween(600, delayMillis = 100)) { 50 }
                     ) {
-                        QuickRemindersRow(
-                            items = allItems.take(5),
-                            onItemClick = { /* Navigate to item detail */ }
-                        )
+                        if (allItems.isEmpty()) {
+                            EmptyStateCard(
+                                onAddItem = { navController.navigate(Screen.AddItem.route) }
+                            )
+                        } else if (todayEssentials.isNotEmpty()) {
+                            TodayEssentialsCard(
+                                items = todayEssentials,
+                                onViewAll = { navController.navigate(Screen.Items.route) }
+                            )
+                        }
                     }
                 }
 
-                item {
-                    AnimatedVisibility(
-                        visible = showContent,
-                        enter = fadeIn(tween(600, delayMillis = 300)) +
-                                slideInVertically(tween(600, delayMillis = 300)) { 50 }
-                    ) {
-                        SectionHeader(
-                            title = "All Items (${allItems.size})",
-                            onViewAll = { navController.navigate(Screen.Items.route) }
-                        )
+                if (allItems.isNotEmpty()) {
+                    item {
+                        AnimatedVisibility(
+                            visible = showContent,
+                            enter = fadeIn(tween(600, delayMillis = 200)) +
+                                    slideInVertically(tween(600, delayMillis = 200)) { 50 }
+                        ) {
+                            SectionHeader(
+                                title = "Quick Reminders",
+                                onViewAll = { navController.navigate(Screen.Items.route) }
+                            )
+                        }
                     }
-                }
 
-                itemsIndexed(
-                    items = allItems.take(4),
-                    key = { _, item -> item.id }
-                ) { index, item ->
-                    AnimatedVisibility(
-                        visible = showContent,
-                        enter = fadeIn(tween(400, delayMillis = 350 + (index * 50))) +
-                                slideInVertically(tween(400, delayMillis = 350 + (index * 50))) { 30 }
-                    ) {
-                        ItemCard(
-                            item = item,
-                            onClick = { /* Navigate to item detail */ },
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
-                        )
+                    item {
+                        AnimatedVisibility(
+                            visible = showContent,
+                            enter = fadeIn(tween(600, delayMillis = 250))
+                        ) {
+                            QuickRemindersRow(
+                                items = allItems.take(5),
+                                onItemClick = { /* Navigate to item detail */ }
+                            )
+                        }
+                    }
+
+                    item {
+                        AnimatedVisibility(
+                            visible = showContent,
+                            enter = fadeIn(tween(600, delayMillis = 300)) +
+                                    slideInVertically(tween(600, delayMillis = 300)) { 50 }
+                        ) {
+                            SectionHeader(
+                                title = "All Items (${allItems.size})",
+                                onViewAll = { navController.navigate(Screen.Items.route) }
+                            )
+                        }
+                    }
+
+                    itemsIndexed(
+                        items = allItems.take(4),
+                        key = { _, item -> item.id }
+                    ) { index, item ->
+                        AnimatedVisibility(
+                            visible = showContent,
+                            modifier = Modifier.animateItem(),
+                            enter = fadeIn(tween(400, delayMillis = 350 + (index * 50))) +
+                                    slideInVertically(tween(400, delayMillis = 350 + (index * 50))) { 30 }
+                        ) {
+                            ItemCard(
+                                item = item,
+                                onClick = { /* Navigate to item detail */ },
+                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                            )
+                        }
                     }
                 }
             }
+
+            // Top fade gradient overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .background(
+                        brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                            colors = listOf(
+                                colorScheme.background,
+                                androidx.compose.ui.graphics.Color.Transparent
+                            )
+                        )
+                    )
+            )
         }
     }
 }
@@ -211,11 +231,11 @@ private fun HomeHeader() {
         Text(
             text = greeting,
             style = ExitSenseTypography.headlineLarge,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.ExtraBold,
             color = colorScheme.onBackground
         )
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         Text(
             text = currentDate,
@@ -283,7 +303,7 @@ private fun EmptyStateCard(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
                     .background(onGradientColor.copy(alpha = 0.2f))
-                    .padding(horizontal = 20.dp, vertical = 10.dp)
+                    .padding(horizontal = 20.dp, vertical = 18.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
@@ -424,13 +444,13 @@ private fun SectionHeader(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
-                .background(colorScheme.primary.copy(alpha = 0.1f))
+                .background(colorScheme.primary.copy(alpha = 0.05f))
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
                     onClick = onViewAll
                 )
-                .padding(horizontal = 12.dp, vertical = 6.dp)
+                .padding(horizontal = 16.dp, vertical = 6.dp)
         ) {
             Text(
                 text = "View All",
@@ -463,7 +483,8 @@ private fun QuickRemindersRow(
         items(items, key = { it.id }) { item ->
             CompactItemCard(
                 item = item,
-                onClick = { onItemClick(item) }
+                onClick = { onItemClick(item) },
+                modifier = Modifier.animateItem()
             )
         }
     }

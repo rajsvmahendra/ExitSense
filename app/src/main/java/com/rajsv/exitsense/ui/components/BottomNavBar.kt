@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -121,6 +122,7 @@ fun BottomNavBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .navigationBarsPadding()
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         // Blur background layer (glassmorphism effect)
@@ -245,5 +247,15 @@ private fun BottomNavItem(
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
             color = textColor
         )
+
+        if (isSelected) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Box(
+                modifier = Modifier
+                    .size(width = 16.dp, height = 3.dp)
+                    .clip(RoundedCornerShape(1.5.dp))
+                    .background(colorScheme.primary)
+            )
+        }
     }
 }

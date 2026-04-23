@@ -6,6 +6,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
@@ -24,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -84,23 +89,23 @@ fun LoginScreen(
                 if (idToken != null) {
                     viewModel.signInWithGoogle(idToken)
                 } else {
-                    Toast.makeText(context, "Google login failed: ID Token is null", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context,
+                        "Sign-in failed: ID token is null. Check Firebase config.",
+                        Toast.LENGTH_LONG).show()
                     viewModel.resetState()
                 }
             } catch (e: ApiException) {
                 val message = when (e.statusCode) {
-                    10 -> "Configuration error (Developer Error 10). Check SHA-1 or Web Client ID."
-                    12500 -> "Firebase configuration issue (12500). Verify google-services.json."
-                    else -> "Google sign in failed: ${e.message}"
+                    12500 -> "Sign-in failed. Check SHA-1 fingerprint in Firebase Console."
+                    10    -> "Developer error: SHA-1 mismatch or wrong web client ID."
+                    else  -> "Google sign-in failed (code ${e.statusCode}): ${e.message}"
                 }
                 Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                 viewModel.resetState()
             }
-        } else if (result.resultCode == Activity.RESULT_CANCELED) {
-            viewModel.resetState()
         } else {
-            Toast.makeText(context, "Sign in cancelled", Toast.LENGTH_SHORT).show()
             viewModel.resetState()
+            // Don't show toast for user-cancelled (resultCode = 0)
         }
     }
 
@@ -113,6 +118,7 @@ fun LoginScreen(
             }
         } else if (uiState is LoginUiState.Error) {
             Toast.makeText(context, (uiState as LoginUiState.Error).message, Toast.LENGTH_SHORT).show()
+            viewModel.resetState()
         }
     }
 
@@ -120,6 +126,17 @@ fun LoginScreen(
         delay(100)
         showContent = true
     }
+
+    // Pulsing dot animation
+    val infiniteTransition = rememberInfiniteTransition()
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 0.95f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
 
     Box(
         modifier = Modifier
@@ -141,23 +158,32 @@ fun LoginScreen(
                 enter = fadeIn(tween(500)) + slideInVertically(tween(500)) { -50 }
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(RoundedCornerShape(28.dp))
-                            .background(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(GradientStart, GradientMiddle, GradientEnd)
-                                )
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.NotificationsActive,
-                            contentDescription = "ExitSense Logo",
-                            tint = ExitSenseTheme.customColors.onGradient,
-                            modifier = Modifier.size(50.dp)
-                        )
+                    Box(contentAlignment = Alignment.Center) {
+                        androidx.compose.foundation.Canvas(modifier = Modifier.size(130.dp)) {
+                            drawCircle(
+                                color = GradientStart.copy(alpha = 0.15f),
+                                radius = size.minDimension / 2 * pulseScale
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .size(110.dp)
+                                .shadow(16.dp, RoundedCornerShape(28.dp))
+                                .clip(RoundedCornerShape(28.dp))
+                                .background(
+                                    brush = Brush.linearGradient(
+                                        colors = listOf(GradientStart, GradientMiddle, GradientEnd)
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.NotificationsActive,
+                                contentDescription = "ExitSense Logo",
+                                tint = ExitSenseTheme.customColors.onGradient,
+                                modifier = Modifier.size(50.dp)
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                     Text(
@@ -165,6 +191,12 @@ fun LoginScreen(
                         style = ExitSenseTypography.displaySmall,
                         fontWeight = FontWeight.Bold,
                         color = textPrimaryColor
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Smart reminders before you leave.",
+                        style = ExitSenseTypography.bodyLarge,
+                        color = textSecondaryColor
                     )
                 }
             }
@@ -180,11 +212,27 @@ fun LoginScreen(
                     text = "Continue with Google",
                     onClick = { launcher.launch(viewModel.getGoogleSignInClient().signInIntent) },
                     isLoading = uiState is LoginUiState.Loading,
-                    icon = Icons.Outlined.AccountCircle // You can replace with a custom Google G icon
+                    icon = null,
+                    customIcon = {
+                        Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(Color.White),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "G",
+                                color = Color(0xFF4285F4),
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    }
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp)) // 8dp spacing before OR divider + 24dp = 32dp
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Divider(modifier = Modifier.weight(1f), color = textTertiaryColor.copy(alpha = 0.2f))
@@ -208,7 +256,8 @@ fun LoginScreen(
                         NotificationHelper.showWelcomeNotification(context, "Guest")
                         onLoginSuccess()
                     }
-                }
+                },
+                icon = Icons.Outlined.PersonOutline
             )
 
             Spacer(modifier = Modifier.weight(1f))

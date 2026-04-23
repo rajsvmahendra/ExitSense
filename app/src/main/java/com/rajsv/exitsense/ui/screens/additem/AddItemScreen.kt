@@ -33,11 +33,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.outlined.AccessTime
+import androidx.compose.material.icons.outlined.BatteryAlert
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.NotificationsActive
+import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.WbCloudy
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
@@ -467,7 +472,8 @@ private fun IconSelector(
                         IconItemWithLabel(
                             icon = icon,
                             isSelected = selectedIcon == icon,
-                            onClick = { onIconSelected(icon) }
+                            onClick = { onIconSelected(icon) },
+                            modifier = Modifier.animateItem()
                         )
                     }
                 }
@@ -509,7 +515,8 @@ private fun IconSelector(
 private fun IconItemWithLabel(
     icon: ItemIcon,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val scale by animateFloatAsState(
         targetValue = if (isSelected) 1.05f else 1f,
@@ -523,7 +530,7 @@ private fun IconItemWithLabel(
     val textColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .scale(scale)
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
@@ -596,7 +603,8 @@ private fun LocationSelector(
                 text = "None",
                 isSelected = selectedLocation == null,
                 onClick = { onLocationSelected(null) },
-                icon = Icons.Outlined.Close
+                icon = Icons.Outlined.Close,
+                modifier = Modifier.animateItem()
             )
         }
 
@@ -604,7 +612,8 @@ private fun LocationSelector(
             CompactLocationCard(
                 location = location,
                 isSelected = selectedLocation?.id == location.id,
-                onClick = { onLocationSelected(location) }
+                onClick = { onLocationSelected(location) },
+                modifier = Modifier.animateItem()
             )
         }
     }
@@ -646,7 +655,15 @@ private fun ConditionSelector(
             PremiumChip(
                 text = condition.label,
                 isSelected = selectedCondition == condition,
-                onClick = { onConditionSelected(condition) }
+                onClick = { onConditionSelected(condition) },
+                modifier = Modifier.animateItem(),
+                icon = when (condition) {
+                    ReminderCondition.LEAVING_LOCATION -> Icons.AutoMirrored.Outlined.ExitToApp
+                    ReminderCondition.TIME_BASED       -> Icons.Outlined.Schedule
+                    ReminderCondition.LOW_BATTERY      -> Icons.Outlined.BatteryAlert
+                    ReminderCondition.WEATHER_BASED    -> Icons.Outlined.WbCloudy
+                    ReminderCondition.ALWAYS           -> Icons.Outlined.NotificationsActive
+                }
             )
         }
     }

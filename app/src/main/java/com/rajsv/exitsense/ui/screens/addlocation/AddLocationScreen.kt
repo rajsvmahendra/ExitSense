@@ -123,7 +123,15 @@ fun AddLocationScreen(
     var showIconPicker by remember { mutableStateOf(false) }
     var isSaving by remember { mutableStateOf(false) }
 
-    // Permission launcher
+    // Permission launchers
+    val backgroundLocationLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (!isGranted) {
+            Toast.makeText(context, "Background location recommended for better reminders.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -131,6 +139,13 @@ fun AddLocationScreen(
         val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
 
         if (fineLocationGranted || coarseLocationGranted) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                if (ContextCompat.checkSelfPermission(
+                        context, Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                    ) != PackageManager.PERMISSION_GRANTED) {
+                    backgroundLocationLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                }
+            }
             detectCurrentLocation(
                 context = context,
                 onLocationDetected = { lat, lng, address ->
@@ -165,6 +180,13 @@ fun AddLocationScreen(
 
         if (fineLocationPermission == PackageManager.PERMISSION_GRANTED ||
             coarseLocationPermission == PackageManager.PERMISSION_GRANTED) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                if (ContextCompat.checkSelfPermission(
+                        context, Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                    ) != PackageManager.PERMISSION_GRANTED) {
+                    backgroundLocationLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                }
+            }
             detectCurrentLocation(
                 context = context,
                 onLocationDetected = { lat, lng, address ->
@@ -688,7 +710,8 @@ private fun LocationIconSelector(
                         LocationIconItemWithLabel(
                             icon = icon,
                             isSelected = selectedIcon == icon,
-                            onClick = { onIconSelected(icon) }
+                            onClick = { onIconSelected(icon) },
+                            modifier = Modifier.animateItem()
                         )
                     }
                 }
@@ -730,7 +753,8 @@ private fun LocationIconSelector(
 private fun LocationIconItemWithLabel(
     icon: LocationIcon,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val scale by animateFloatAsState(
         targetValue = if (isSelected) 1.05f else 1f,
@@ -744,7 +768,7 @@ private fun LocationIconItemWithLabel(
     val textColor = if (isSelected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .scale(scale)
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)

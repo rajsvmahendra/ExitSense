@@ -44,6 +44,7 @@ fun PremiumButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
+    customIcon: @Composable (() -> Unit)? = null,
     enabled: Boolean = true,
     isLoading: Boolean = false,
     useGradient: Boolean = true,
@@ -96,7 +97,10 @@ fun PremiumButton(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (icon != null && !isLoading) {
+            if (customIcon != null && !isLoading) {
+                customIcon()
+                Spacer(modifier = Modifier.width(10.dp))
+            } else if (icon != null && !isLoading) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,

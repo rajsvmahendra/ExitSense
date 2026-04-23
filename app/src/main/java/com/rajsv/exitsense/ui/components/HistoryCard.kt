@@ -10,8 +10,10 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -92,14 +94,18 @@ fun HistoryCard(
     }
 
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min),
         verticalAlignment = Alignment.Top
     ) {
         // Timeline Dot
         if (showTimelineDot) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(end = 12.dp)
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(end = 12.dp, top = 32.dp)
             ) {
                 Box(
                     modifier = Modifier
@@ -112,7 +118,7 @@ fun HistoryCard(
                 Box(
                     modifier = Modifier
                         .width(2.dp)
-                        .height(80.dp)
+                        .weight(1f)
                         .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
                 )
             }

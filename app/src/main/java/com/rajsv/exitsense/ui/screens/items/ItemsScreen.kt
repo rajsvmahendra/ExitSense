@@ -205,13 +205,13 @@ fun ItemsScreen(
                 }
             }
 
-            // Items List with Swipe Delete
             itemsIndexed(
                 items = filteredItems,
                 key = { _, item -> item.id }
             ) { index, item ->
                 AnimatedVisibility(
                     visible = showContent,
+                    modifier = Modifier.animateItem(),
                     enter = fadeIn(tween(400, delayMillis = 250 + (index * 50))) +
                             slideInVertically(tween(400, delayMillis = 250 + (index * 50))) { 30 }
                 ) {
@@ -306,11 +306,12 @@ private fun FilterChipsRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.padding(vertical = 8.dp)
     ) {
-        itemsIndexed(filters) { index, filter ->
+        itemsIndexed(filters, key = { _, filter -> filter }) { index, filter ->
             PremiumChip(
                 text = filter,
                 isSelected = selectedIndex == index,
-                onClick = { onFilterSelected(index) }
+                onClick = { onFilterSelected(index) },
+                modifier = Modifier.animateItem()
             )
         }
     }

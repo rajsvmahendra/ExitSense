@@ -328,6 +328,7 @@ fun LocationsScreen(
             ) { index, location ->
                 AnimatedVisibility(
                     visible = showContent,
+                    modifier = Modifier.animateItem(),
                     enter = fadeIn(tween(400, delayMillis = 200 + (index * 50))) +
                             slideInVertically(tween(400, delayMillis = 200 + (index * 50))) { 30 }
                 ) {
