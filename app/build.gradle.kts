@@ -43,6 +43,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("androidx.biometric:biometric:1.1.0")
     implementation("com.google.android.gms:play-services-location:21.1.0")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation(libs.coil.compose)

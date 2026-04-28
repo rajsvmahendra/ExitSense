@@ -23,6 +23,7 @@ object SettingsDataStore {
     private val SMART_REMINDERS_KEY = booleanPreferencesKey("smart_reminders")
     private val REMINDER_SENSITIVITY_KEY = intPreferencesKey("reminder_sensitivity")
     private val LANGUAGE_KEY = stringPreferencesKey("language")
+    private val APP_LOCK_KEY = booleanPreferencesKey("app_lock")
 
     // Get Dark Mode
     fun getDarkMode(context: Context): Flow<Boolean> {
@@ -105,6 +106,20 @@ object SettingsDataStore {
     suspend fun setLanguage(context: Context, language: String) {
         context.dataStore.edit { preferences ->
             preferences[LANGUAGE_KEY] = language
+        }
+    }
+
+    // Get App Lock
+    fun getAppLock(context: Context): Flow<Boolean> {
+        return context.dataStore.data.map { preferences ->
+            preferences[APP_LOCK_KEY] ?: false // Default: false
+        }
+    }
+
+    // Set App Lock
+    suspend fun setAppLock(context: Context, enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[APP_LOCK_KEY] = enabled
         }
     }
 }

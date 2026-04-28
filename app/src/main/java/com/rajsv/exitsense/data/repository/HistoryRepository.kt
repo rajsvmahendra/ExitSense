@@ -14,6 +14,7 @@ import com.rajsv.exitsense.data.model.ItemIcon
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
@@ -121,8 +122,54 @@ object HistoryRepository {
                 totalReminders = entries.size,
                 acknowledged = entries.count { it.status == HistoryStatus.ACKNOWLEDGED },
                 forgotten = entries.count { it.status == HistoryStatus.FORGOT },
-                dismissed = entries.count { it.status == HistoryStatus.DISMISSED }
+                dismissed = entries.count { it.status == HistoryStatus.DISMISSED },
+                streak = calculateStreak(entries)
             )
+        }
+    }
+
+    private fun calculateStreak(entries: List<HistoryEntry>): Int {
+        if (entries.isEmpty()) return 0
+        
+        try {
+            val entriesByDate = entries.groupBy { it.date }
+            val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+            val sortedDates = entriesByDate.keys.toList().sortedByDescending { 
+                try { sdf.parse(it)?.time ?: 0L } catch (e: Exception) { 0L }
+            }
+            
+            var streak = 0
+            val calendar = Calendar.getInstance()
+            
+            // Start from today or yesterday
+            val today = sdf.format(calendar.time)
+            calendar.add(Calendar.DAY_OF_YEAR, -1)
+            val yesterday = sdf.format(calendar.time)
+            
+            var expectedDate = if (entriesByDate.containsKey(today)) today else yesterday
+            
+            for (date in sortedDates) {
+                if (date != expectedDate) break
+                
+                val dayEntries = entriesByDate[date] ?: emptyList()
+                val hadForgotten = dayEntries.any { it.status == HistoryStatus.FORGOT }
+                
+                if (!hadForgotten) {
+                    streak++
+                    // Move to previous day
+                    val d = try { sdf.parse(date) } catch (e: Exception) { null } ?: break
+                    val cal = Calendar.getInstance()
+                    cal.time = d
+                    cal.add(Calendar.DAY_OF_YEAR, -1)
+                    expectedDate = sdf.format(cal.time)
+                } else {
+                    break
+                }
+            }
+            return streak
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return 0
         }
     }
 
@@ -141,7 +188,8 @@ data class HistoryStats(
     val totalReminders: Int,
     val acknowledged: Int,
     val forgotten: Int,
-    val dismissed: Int
+    val dismissed: Int,
+    val streak: Int = 0
 ) {
     val successRate: Int
         get() = if (totalReminders > 0) {

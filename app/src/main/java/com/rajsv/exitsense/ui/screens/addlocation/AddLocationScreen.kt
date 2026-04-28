@@ -56,6 +56,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -78,6 +79,7 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.rajsv.exitsense.data.model.Location
 import com.rajsv.exitsense.data.model.LocationIcon
+import com.rajsv.exitsense.data.model.SettingsDataStore
 import com.rajsv.exitsense.data.repository.LocationsRepository
 import com.rajsv.exitsense.ui.components.GradientCard
 import com.rajsv.exitsense.ui.components.PremiumButton
@@ -118,6 +120,9 @@ fun AddLocationScreen(
     var longitude by remember { mutableStateOf<Double?>(null) }
     var isDetectingLocation by remember { mutableStateOf(false) }
     var locationDetected by remember { mutableStateOf(false) }
+
+    // Source of truth
+    val locationEnabled by SettingsDataStore.getLocationServices(context).collectAsState(initial = true)
 
     // UI states
     var showIconPicker by remember { mutableStateOf(false) }
@@ -169,6 +174,11 @@ fun AddLocationScreen(
 
     // Function to handle location detection
     fun handleDetectLocation() {
+        if (!locationEnabled) {
+            Toast.makeText(context, "Location services disabled in Settings", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         isDetectingLocation = true
 
         val fineLocationPermission = ContextCompat.checkSelfPermission(

@@ -63,6 +63,7 @@ import androidx.navigation.NavController
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import com.rajsv.exitsense.data.model.SettingsDataStore
 import com.rajsv.exitsense.data.repository.LocationsRepository
 import com.rajsv.exitsense.navigation.Screen
 import com.rajsv.exitsense.ui.components.BottomNavBar
@@ -96,6 +97,9 @@ fun LocationsScreen(
     var isDetectingLocation by remember { mutableStateOf(false) }
     var currentLocationText by remember { mutableStateOf<String?>(null) }
     var showBackgroundPermissionDialog by remember { mutableStateOf(false) }
+
+    // Source of truth from DataStore
+    val locationEnabled by SettingsDataStore.getLocationServices(context).collectAsState(initial = true)
 
     // Get real locations from repository
     val locations by LocationsRepository.getLocations(context).collectAsState(initial = emptyList())
@@ -180,6 +184,11 @@ fun LocationsScreen(
 
     // Function to handle location detection
     fun handleDetectLocation() {
+        if (!locationEnabled) {
+            Toast.makeText(context, "Location services disabled in Settings", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
         isDetectingLocation = true
 
         val fineLocationPermission = ContextCompat.checkSelfPermission(
@@ -248,6 +257,33 @@ fun LocationsScreen(
                         totalCount = locations.size,
                         activeCount = activeLocationsCount
                     )
+                }
+            }
+
+            // Location Disabled Warning
+            if (!locationEnabled) {
+                item {
+                    AnimatedVisibility(
+                        visible = showContent,
+                        enter = fadeIn(tween(500))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 8.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f))
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Location services disabled in Settings",
+                                style = ExitSenseTypography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
                 }
             }
 

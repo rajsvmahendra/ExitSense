@@ -1,13 +1,22 @@
 package com.rajsv.exitsense.ui.screens.settings
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import androidx.compose.animation.core.EaseOutQuart
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +36,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.BugReport
@@ -34,6 +45,7 @@ import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.ExitToApp
+import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
@@ -47,6 +59,7 @@ import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -72,6 +85,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.rajsv.exitsense.data.model.SettingsDataStore
@@ -115,8 +129,41 @@ fun SettingsScreen(
     val notificationsEnabled by SettingsDataStore.getNotifications(context).collectAsState(initial = true)
     val locationEnabled by SettingsDataStore.getLocationServices(context).collectAsState(initial = true)
     val smartReminders by SettingsDataStore.getSmartReminders(context).collectAsState(initial = true)
+    val appLockEnabled by SettingsDataStore.getAppLock(context).collectAsState(initial = false)
     val reminderSensitivity by SettingsDataStore.getReminderSensitivity(context).collectAsState(initial = 1)
     val language by SettingsDataStore.getLanguage(context).collectAsState(initial = "English")
+
+    // Permission Launchers
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        scope.launch {
+            if (isGranted) {
+                SettingsDataStore.setNotifications(context, true)
+                Toast.makeText(context, "Notifications Enabled", Toast.LENGTH_SHORT).show()
+            } else {
+                SettingsDataStore.setNotifications(context, false)
+                Toast.makeText(context, "Permission Denied: Notifications", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        
+        scope.launch {
+            if (fineGranted || coarseGranted) {
+                SettingsDataStore.setLocationServices(context, true)
+                Toast.makeText(context, "Location Services Enabled", Toast.LENGTH_SHORT).show()
+            } else {
+                SettingsDataStore.setLocationServices(context, false)
+                Toast.makeText(context, "Permission Denied: Location", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     // Dialog states
     var showSensitivityDialog by remember { mutableStateOf(false) }
@@ -145,13 +192,14 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(paddingValues),
-            contentPadding = PaddingValues(bottom = 100.dp)
+            contentPadding = PaddingValues(bottom = 32.dp)
         ) {
             // Header
             item {
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = showContent,
-                    enter = fadeIn(tween(500)) + slideInVertically(tween(500)) { -50 }
+                    enter = fadeIn(tween(600, easing = EaseOutQuart)) + 
+                            slideInVertically(tween(600, easing = EaseOutQuart)) { -40 }
                 ) {
                     SettingsHeader()
                 }
@@ -159,10 +207,10 @@ fun SettingsScreen(
 
             // User Profile Card
             item {
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = showContent,
-                    enter = fadeIn(tween(600, delayMillis = 50)) +
-                            slideInVertically(tween(600, delayMillis = 50)) { 30 }
+                    enter = fadeIn(tween(700, delayMillis = 100, easing = EaseOutQuart)) +
+                            slideInVertically(tween(700, delayMillis = 100, easing = EaseOutQuart)) { 30 }
                 ) {
                     UserProfileCard(
                         userName = userName,
@@ -174,19 +222,19 @@ fun SettingsScreen(
 
             // Preferences Section
             item {
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = showContent,
-                    enter = fadeIn(tween(500, delayMillis = 100))
+                    enter = fadeIn(tween(600, delayMillis = 200, easing = EaseOutQuart))
                 ) {
                     SectionTitle(title = "Preferences")
                 }
             }
 
             item {
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = showContent,
-                    enter = fadeIn(tween(500, delayMillis = 150)) +
-                            slideInVertically(tween(500, delayMillis = 150)) { 30 }
+                    enter = fadeIn(tween(700, delayMillis = 250, easing = EaseOutQuart)) +
+                            slideInVertically(tween(700, delayMillis = 250, easing = EaseOutQuart)) { 30 }
                 ) {
                     SettingsCard {
                         SettingsToggleItem(
@@ -204,18 +252,71 @@ fun SettingsScreen(
                         SettingsDivider()
 
                         SettingsToggleItem(
+                            icon = Icons.Outlined.Fingerprint,
+                            title = "App Lock",
+                            subtitle = if (appLockEnabled) "Biometric security active" else "Protect app with fingerprint",
+                            isChecked = appLockEnabled,
+                            onCheckedChange = { enabled ->
+                                if (enabled) {
+                                    val biometricManager = BiometricManager.from(context)
+                                    when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL)) {
+                                        BiometricManager.BIOMETRIC_SUCCESS -> {
+                                            showBiometricPrompt(
+                                                activity = context as FragmentActivity,
+                                                onSuccess = {
+                                                    scope.launch {
+                                                        SettingsDataStore.setAppLock(context, true)
+                                                        Toast.makeText(context, "App Lock Enabled", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                },
+                                                onError = { error ->
+                                                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                                                }
+                                            )
+                                        }
+                                        else -> {
+                                            Toast.makeText(context, "Biometrics not available", Toast.LENGTH_LONG).show()
+                                        }
+                                    }
+                                } else {
+                                    showBiometricPrompt(
+                                        activity = context as FragmentActivity,
+                                        onSuccess = {
+                                            scope.launch {
+                                                SettingsDataStore.setAppLock(context, false)
+                                                Toast.makeText(context, "App Lock Disabled", Toast.LENGTH_SHORT).show()
+                                            }
+                                        },
+                                        onError = { error ->
+                                            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                                        }
+                                    )
+                                }
+                            }
+                        )
+
+                        SettingsDivider()
+
+                        SettingsToggleItem(
                             icon = Icons.Outlined.Notifications,
                             title = "Notifications",
-                            subtitle = if (notificationsEnabled) "Push notifications on" else "Push notifications off",
+                            subtitle = if (notificationsEnabled) "Always stay updated" else "Push alerts are disabled",
                             isChecked = notificationsEnabled,
                             onCheckedChange = { enabled ->
-                                scope.launch {
-                                    SettingsDataStore.setNotifications(context, enabled)
-                                    Toast.makeText(
-                                        context,
-                                        if (enabled) "Notifications enabled" else "Notifications disabled",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                if (enabled) {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    } else {
+                                        scope.launch {
+                                            SettingsDataStore.setNotifications(context, true)
+                                            Toast.makeText(context, "Notifications Enabled", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                } else {
+                                    scope.launch {
+                                        SettingsDataStore.setNotifications(context, false)
+                                        Toast.makeText(context, "Notifications Disabled", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             }
                         )
@@ -225,16 +326,21 @@ fun SettingsScreen(
                         SettingsToggleItem(
                             icon = Icons.Outlined.LocationOn,
                             title = "Location Services",
-                            subtitle = if (locationEnabled) "Location access allowed" else "Location access denied",
+                            subtitle = if (locationEnabled) "GPS reminders active" else "Geofencing disabled",
                             isChecked = locationEnabled,
                             onCheckedChange = { enabled ->
-                                scope.launch {
-                                    SettingsDataStore.setLocationServices(context, enabled)
-                                    Toast.makeText(
-                                        context,
-                                        if (enabled) "Location services enabled" else "Location services disabled",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                if (enabled) {
+                                    locationPermissionLauncher.launch(
+                                        arrayOf(
+                                            Manifest.permission.ACCESS_FINE_LOCATION,
+                                            Manifest.permission.ACCESS_COARSE_LOCATION
+                                        )
+                                    )
+                                } else {
+                                    scope.launch {
+                                        SettingsDataStore.setLocationServices(context, false)
+                                        Toast.makeText(context, "Location disabled", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             }
                         )
@@ -244,34 +350,29 @@ fun SettingsScreen(
 
             // Smart Features Section
             item {
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = showContent,
-                    enter = fadeIn(tween(500, delayMillis = 200))
+                    enter = fadeIn(tween(600, delayMillis = 350, easing = EaseOutQuart))
                 ) {
                     SectionTitle(title = "Smart Features")
                 }
             }
 
             item {
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = showContent,
-                    enter = fadeIn(tween(500, delayMillis = 250)) +
-                            slideInVertically(tween(500, delayMillis = 250)) { 30 }
+                    enter = fadeIn(tween(700, delayMillis = 400, easing = EaseOutQuart)) +
+                            slideInVertically(tween(700, delayMillis = 400, easing = EaseOutQuart)) { 30 }
                 ) {
                     SettingsCard {
                         SettingsToggleItem(
                             icon = Icons.Outlined.Speed,
                             title = "Smart Reminders",
-                            subtitle = if (smartReminders) "Learning from your habits" else "Basic reminders only",
+                            subtitle = if (smartReminders) "Adaptive learning active" else "Basic logic enabled",
                             isChecked = smartReminders,
                             onCheckedChange = { enabled ->
                                 scope.launch {
                                     SettingsDataStore.setSmartReminders(context, enabled)
-                                    Toast.makeText(
-                                        context,
-                                        if (enabled) "Smart reminders enabled" else "Smart reminders disabled",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
                                 }
                             }
                         )
@@ -299,25 +400,25 @@ fun SettingsScreen(
 
             // Data Management Section
             item {
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = showContent,
-                    enter = fadeIn(tween(500, delayMillis = 300))
+                    enter = fadeIn(tween(600, delayMillis = 500, easing = EaseOutQuart))
                 ) {
                     SectionTitle(title = "Data Management")
                 }
             }
 
             item {
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = showContent,
-                    enter = fadeIn(tween(500, delayMillis = 350)) +
-                            slideInVertically(tween(500, delayMillis = 350)) { 30 }
+                    enter = fadeIn(tween(700, delayMillis = 550, easing = EaseOutQuart)) +
+                            slideInVertically(tween(700, delayMillis = 550, easing = EaseOutQuart)) { 30 }
                 ) {
                     SettingsCard {
                         SettingsClickItem(
                             icon = Icons.Outlined.History,
                             title = "Clear History",
-                            subtitle = "Delete all reminder history",
+                            subtitle = "Remove all logs",
                             onClick = { showClearHistoryDialog = true },
                             iconColor = ExitSenseTheme.customColors.statusWarning
                         )
@@ -327,7 +428,7 @@ fun SettingsScreen(
                         SettingsClickItem(
                             icon = Icons.Outlined.DeleteOutline,
                             title = "Clear All Data",
-                            subtitle = "Delete all items, locations and history",
+                            subtitle = "Factory reset app local storage",
                             onClick = { showClearDataDialog = true },
                             iconColor = MaterialTheme.colorScheme.error,
                             titleColor = MaterialTheme.colorScheme.error
@@ -336,72 +437,27 @@ fun SettingsScreen(
                 }
             }
 
-            // About Section
-            item {
-                AnimatedVisibility(
-                    visible = showContent,
-                    enter = fadeIn(tween(500, delayMillis = 400))
-                ) {
-                    SectionTitle(title = "About")
-                }
-            }
-
-            item {
-                AnimatedVisibility(
-                    visible = showContent,
-                    enter = fadeIn(tween(500, delayMillis = 450)) +
-                            slideInVertically(tween(500, delayMillis = 450)) { 30 }
-                ) {
-                    SettingsCard {
-                        SettingsClickItem(
-                            icon = Icons.Outlined.Info,
-                            title = "About ExitSense",
-                            subtitle = "Version 1.0.0",
-                            onClick = { showAboutDialog = true }
-                        )
-
-                        SettingsDivider()
-
-                        SettingsClickItem(
-                            icon = Icons.Outlined.PrivacyTip,
-                            title = "Privacy Policy",
-                            subtitle = "Read our privacy policy",
-                            onClick = { showPrivacyDialog = true }
-                        )
-
-                        SettingsDivider()
-
-                        SettingsClickItem(
-                            icon = Icons.Outlined.Security,
-                            title = "Terms of Service",
-                            subtitle = "Read terms and conditions",
-                            onClick = { showTermsDialog = true }
-                        )
-                    }
-                }
-            }
-
             // Support Section
             item {
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = showContent,
-                    enter = fadeIn(tween(500, delayMillis = 500))
+                    enter = fadeIn(tween(600, delayMillis = 650, easing = EaseOutQuart))
                 ) {
-                    SectionTitle(title = "Support")
+                    SectionTitle(title = "Community")
                 }
             }
 
             item {
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = showContent,
-                    enter = fadeIn(tween(500, delayMillis = 550)) +
-                            slideInVertically(tween(500, delayMillis = 550)) { 30 }
+                    enter = fadeIn(tween(700, delayMillis = 700, easing = EaseOutQuart)) +
+                            slideInVertically(tween(700, delayMillis = 700, easing = EaseOutQuart)) { 30 }
                 ) {
                     SettingsCard {
                         SettingsClickItem(
                             icon = Icons.Outlined.Star,
-                            title = "Rate App",
-                            subtitle = "Rate us on Play Store",
+                            title = "Rate ExitSense",
+                            subtitle = "Your feedback helps us grow",
                             onClick = { showRateDialog = true },
                             iconColor = AccentSecondary
                         )
@@ -410,8 +466,8 @@ fun SettingsScreen(
 
                         SettingsClickItem(
                             icon = Icons.Outlined.Share,
-                            title = "Share App",
-                            subtitle = "Share with friends",
+                            title = "Share with Friends",
+                            subtitle = "Invite others to use ExitSense",
                             onClick = {
                                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                     type = "text/plain"
@@ -424,51 +480,31 @@ fun SettingsScreen(
                                 context.startActivity(Intent.createChooser(shareIntent, "Share ExitSense"))
                             }
                         )
-
-                        SettingsDivider()
-
-                        SettingsClickItem(
-                            icon = Icons.Outlined.BugReport,
-                            title = "Report Bug",
-                            subtitle = "Help us improve",
-                            onClick = {
-                                val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
-                                    data = Uri.parse("mailto:rajasvmahendra@gmail.com")
-                                    putExtra(Intent.EXTRA_SUBJECT, "ExitSense Bug Report")
-                                    putExtra(Intent.EXTRA_TEXT, "Please describe the bug:\n\n")
-                                }
-                                try {
-                                    context.startActivity(emailIntent)
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        )
                     }
                 }
             }
 
             // Account Section
             item {
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = showContent,
-                    enter = fadeIn(tween(500, delayMillis = 600))
+                    enter = fadeIn(tween(600, delayMillis = 800, easing = EaseOutQuart))
                 ) {
                     SectionTitle(title = "Account")
                 }
             }
 
             item {
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = showContent,
-                    enter = fadeIn(tween(500, delayMillis = 650)) +
-                            slideInVertically(tween(500, delayMillis = 650)) { 30 }
+                    enter = fadeIn(tween(700, delayMillis = 850, easing = EaseOutQuart)) +
+                            slideInVertically(tween(700, delayMillis = 850, easing = EaseOutQuart)) { 30 }
                 ) {
                     SettingsCard {
                         SettingsClickItem(
                             icon = Icons.Outlined.ExitToApp,
                             title = "Logout",
-                            subtitle = "Sign out of your account",
+                            subtitle = "Currently signed in as $userName",
                             onClick = { showLogoutDialog = true },
                             iconColor = MaterialTheme.colorScheme.error,
                             titleColor = MaterialTheme.colorScheme.error
@@ -479,9 +515,9 @@ fun SettingsScreen(
 
             // App Info Footer
             item {
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = showContent,
-                    enter = fadeIn(tween(500, delayMillis = 700))
+                    enter = fadeIn(tween(600, delayMillis = 950, easing = EaseOutQuart))
                 ) {
                     AppInfoFooter()
                 }
@@ -605,44 +641,47 @@ fun SettingsScreen(
 
 @Composable
 private fun SettingsHeader() {
+    val colorScheme = MaterialTheme.colorScheme
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
-            .padding(top = 20.dp, bottom = 8.dp)
+            .padding(top = 24.dp, bottom = 12.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(AccentPrimary.copy(alpha = 0.15f)),
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(AccentPrimary.copy(alpha = 0.12f))
+                    .border(1.dp, AccentPrimary.copy(alpha = 0.1f), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Settings,
                     contentDescription = null,
                     tint = AccentPrimary,
-                    modifier = Modifier.size(26.dp)
+                    modifier = Modifier.size(28.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(18.dp))
 
             Column {
                 Text(
                     text = "Settings",
-                    style = ExitSenseTypography.headlineLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
+                    style = ExitSenseTypography.headlineMedium,
+                    fontWeight = FontWeight.Black,
+                    color = colorScheme.onBackground
                 )
 
                 Text(
-                    text = "Customize your experience",
-                    style = ExitSenseTypography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "Manage your preferences",
+                    style = ExitSenseTypography.labelMedium,
+                    color = colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
@@ -655,22 +694,23 @@ private fun UserProfileCard(
     userEmail: String,
     userPhotoUrl: String? = null
 ) {
+    val onGradientColor = ExitSenseTheme.customColors.onGradient
     GradientCard(
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
         gradientColors = listOf(GradientStart, GradientMiddle, GradientEnd),
-        cornerRadius = 24.dp,
-        contentPadding = 20.dp
+        cornerRadius = 32.dp,
+        contentPadding = 24.dp
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Avatar with Coil
             Box(
                 modifier = Modifier
-                    .size(60.dp)
+                    .size(64.dp)
                     .clip(CircleShape)
-                    .background(ExitSenseTheme.customColors.onGradient.copy(alpha = 0.2f)),
+                    .background(onGradientColor.copy(alpha = 0.15f))
+                    .border(1.5.dp, onGradientColor.copy(alpha = 0.2f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 if (!userPhotoUrl.isNullOrEmpty()) {
@@ -679,55 +719,55 @@ private fun UserProfileCard(
                         contentDescription = "Profile Picture",
                         modifier = Modifier.fillMaxSize()
                     )
-                } else if (userName.isNotEmpty() && userName != "Guest") {
-                    Text(
-                        text = userName.first().uppercase(),
-                        style = ExitSenseTypography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = ExitSenseTheme.customColors.onGradient
-                    )
                 } else {
-                    Icon(
-                        imageVector = Icons.Outlined.Person,
-                        contentDescription = "Profile",
-                        tint = ExitSenseTheme.customColors.onGradient,
-                        modifier = Modifier.size(32.dp)
+                    val initial = if (userName.isNotEmpty() && userName != "Guest") userName.first().uppercase() else "G"
+                    Text(
+                        text = initial,
+                        style = ExitSenseTypography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = onGradientColor
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(18.dp))
 
-            // User Info
             Column(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = if (userName.isNotEmpty()) userName else "Guest",
+                    text = if (userName.isNotEmpty()) userName else "Guest User",
                     style = ExitSenseTypography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = ExitSenseTheme.customColors.onGradient,
+                    color = onGradientColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                if (userEmail.isNotEmpty() && userEmail != "guest@exitsense.app") {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = userEmail,
-                        style = ExitSenseTypography.bodyMedium,
-                        color = ExitSenseTheme.customColors.onGradient.copy(alpha = 0.7f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                } else {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Welcome to ExitSense!",
-                        style = ExitSenseTypography.bodyMedium,
-                        color = ExitSenseTheme.customColors.onGradient.copy(alpha = 0.7f)
-                    )
-                }
+                Spacer(modifier = Modifier.height(2.dp))
+                
+                Text(
+                    text = if (userEmail.isNotEmpty() && userEmail != "guest@exitsense.app") userEmail else "Standard Account",
+                    style = ExitSenseTypography.bodyMedium,
+                    color = onGradientColor.copy(alpha = 0.75f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(onGradientColor.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Shield,
+                    contentDescription = null,
+                    tint = onGradientColor,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }
@@ -736,11 +776,12 @@ private fun UserProfileCard(
 @Composable
 private fun SectionTitle(title: String) {
     Text(
-        text = title,
-        style = ExitSenseTypography.titleSmall,
-        fontWeight = FontWeight.SemiBold,
-        color = ExitSenseTheme.customColors.textMuted,
-        modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
+        text = title.uppercase(),
+        style = ExitSenseTypography.labelMedium,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.primary,
+        letterSpacing = 1.2.sp,
+        modifier = Modifier.padding(start = 28.dp, end = 28.dp, top = 24.dp, bottom = 8.dp)
     )
 }
 
@@ -748,12 +789,18 @@ private fun SectionTitle(title: String) {
 private fun SettingsCard(
     content: @Composable () -> Unit
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(MaterialTheme.colorScheme.primaryContainer)
+            .padding(horizontal = 20.dp, vertical = 6.dp)
+            .clip(RoundedCornerShape(28.dp))
+            .background(colorScheme.surfaceVariant.copy(alpha = 0.4f))
+            .border(
+                width = 1.dp,
+                color = colorScheme.outline.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(28.dp)
+            )
     ) {
         Column {
             content()
@@ -770,17 +817,18 @@ private fun SettingsToggleItem(
     onCheckedChange: (Boolean) -> Unit,
     iconColor: Color = AccentPrimary
 ) {
+    val colorScheme = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(42.dp)
+                .size(44.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(iconColor.copy(alpha = 0.12f)),
+                .background(iconColor.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -791,7 +839,7 @@ private fun SettingsToggleItem(
             )
         }
 
-        Spacer(modifier = Modifier.width(14.dp))
+        Spacer(modifier = Modifier.width(16.dp))
 
         Column(
             modifier = Modifier.weight(1f)
@@ -799,16 +847,19 @@ private fun SettingsToggleItem(
             Text(
                 text = title,
                 style = ExitSenseTypography.titleSmall,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
+                fontWeight = FontWeight.Bold,
+                color = colorScheme.onSurface
             )
 
             Text(
                 text = subtitle,
-                style = ExitSenseTypography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = ExitSenseTypography.labelSmall,
+                color = colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                lineHeight = 16.sp
             )
         }
+
+        Spacer(modifier = Modifier.width(8.dp))
 
         PremiumToggle(
             isChecked = isChecked,
@@ -827,6 +878,7 @@ private fun SettingsClickItem(
     titleColor: Color? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    val colorScheme = MaterialTheme.colorScheme
 
     Row(
         modifier = Modifier
@@ -836,14 +888,14 @@ private fun SettingsClickItem(
                 indication = null,
                 onClick = onClick
             )
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(42.dp)
+                .size(44.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(iconColor.copy(alpha = 0.12f)),
+                .background(iconColor.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -854,7 +906,7 @@ private fun SettingsClickItem(
             )
         }
 
-        Spacer(modifier = Modifier.width(14.dp))
+        Spacer(modifier = Modifier.width(16.dp))
 
         Column(
             modifier = Modifier.weight(1f)
@@ -862,22 +914,23 @@ private fun SettingsClickItem(
             Text(
                 text = title,
                 style = ExitSenseTypography.titleSmall,
-                fontWeight = FontWeight.Medium,
-                color = titleColor ?: MaterialTheme.colorScheme.onSurface
+                fontWeight = FontWeight.Bold,
+                color = titleColor ?: colorScheme.onSurface
             )
 
             Text(
                 text = subtitle,
-                style = ExitSenseTypography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = ExitSenseTypography.labelSmall,
+                color = colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                lineHeight = 16.sp
             )
         }
 
         Icon(
             imageVector = Icons.Outlined.ChevronRight,
             contentDescription = null,
-            tint = ExitSenseTheme.customColors.textMuted,
-            modifier = Modifier.size(20.dp)
+            tint = colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+            modifier = Modifier.size(18.dp)
         )
     }
 }
@@ -898,7 +951,7 @@ private fun AppInfoFooter() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 32.dp),
+            .padding(top = 48.dp, bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
@@ -1393,6 +1446,40 @@ private fun RateAppDialog(
 }
 
 // ==================== HELPER FUNCTIONS ====================
+
+private fun showBiometricPrompt(
+    activity: FragmentActivity,
+    onSuccess: () -> Unit,
+    onError: (String) -> Unit
+) {
+    val executor = ContextCompat.getMainExecutor(activity)
+    val biometricPrompt = BiometricPrompt(activity, executor,
+        object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                super.onAuthenticationError(errorCode, errString)
+                onError(errString.toString())
+            }
+
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                super.onAuthenticationSucceeded(result)
+                onSuccess()
+            }
+
+            override fun onAuthenticationFailed() {
+                super.onAuthenticationFailed()
+                onError("Authentication failed")
+            }
+        })
+
+    val promptInfo = BiometricPrompt.PromptInfo.Builder()
+        .setTitle("Biometric Authentication")
+        .setSubtitle("Confirm your identity to change App Lock")
+        .setNegativeButtonText("Cancel")
+        .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+        .build()
+
+    biometricPrompt.authenticate(promptInfo)
+}
 
 private fun getSensitivityText(level: Int): String {
     return when (level) {

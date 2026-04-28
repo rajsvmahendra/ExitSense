@@ -9,11 +9,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.rajsv.exitsense.MainActivity
 import com.rajsv.exitsense.R
+import com.rajsv.exitsense.data.model.SettingsDataStore
+import kotlinx.coroutines.flow.first
 
 object NotificationHelper {
 
@@ -55,7 +58,8 @@ object NotificationHelper {
 
     // Show welcome notification
     @SuppressLint("MissingPermission")
-    fun showWelcomeNotification(context: Context, userName: String) {
+    suspend fun showWelcomeNotification(context: Context, userName: String) {
+        if (!isNotificationToggleEnabled(context)) return
         if (!hasNotificationPermission(context)) return
 
         val intent = Intent(context, MainActivity::class.java).apply {
@@ -85,13 +89,20 @@ object NotificationHelper {
 
     // Show reminder notification
     @SuppressLint("MissingPermission")
-    fun showReminderNotification(
+    suspend fun showReminderNotification(
         context: Context,
         notificationId: Int,
         title: String,
         message: String,
-        items: List<String> = emptyList()
+        items: List<String> = emptyList(),
+        showToastIfDisabled: Boolean = false
     ) {
+        if (!isNotificationToggleEnabled(context)) {
+            if (showToastIfDisabled) {
+                Toast.makeText(context, "Enable notifications in Settings", Toast.LENGTH_SHORT).show()
+            }
+            return
+        }
         if (!hasNotificationPermission(context)) return
 
         val intent = Intent(context, MainActivity::class.java).apply {
@@ -132,7 +143,7 @@ object NotificationHelper {
     }
 
     // Show location-based reminder
-    fun showLocationReminderNotification(
+    suspend fun showLocationReminderNotification(
         context: Context,
         locationName: String,
         items: List<String>
@@ -151,6 +162,10 @@ object NotificationHelper {
             message = message,
             items = items
         )
+    }
+
+    suspend fun isNotificationToggleEnabled(context: Context): Boolean {
+        return SettingsDataStore.getNotifications(context).first()
     }
 
     // Check notification permission
