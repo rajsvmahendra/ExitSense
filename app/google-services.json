@@ -14,19 +14,19 @@
       },
       "oauth_client": [
         {
+          "client_id": "484963859939-bj1n7dnq1rt6ktk98cfgvsapj2kviqk5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rajsv.exitsense",
+            "certificate_hash": "4872cf96f79bbd97e34d5dbe35c8a7746e90dea6"
+          }
+        },
+        {
           "client_id": "484963859939-fnbdhqi5p819cta2hcha73p699ulc6pp.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.rajsv.exitsense",
             "certificate_hash": "2751d516caf8240de70830e65d746348c469246a"
-          }
-        },
-        {
-          "client_id": "484963859939-mutfcq2ih4qng8eq6buc534hlf9j2ku6.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.rajsv.exitsense",
-            "certificate_hash": "d642bb2fbecc2ace1642bae5c183c55ff8dc1c69"
           }
         },
         {

@@ -1,6 +1,7 @@
 package com.rajsv.exitsense.service
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -53,6 +54,7 @@ object NotificationHelper {
     }
 
     // Show welcome notification
+    @SuppressLint("MissingPermission")
     fun showWelcomeNotification(context: Context, userName: String) {
         if (!hasNotificationPermission(context)) return
 
@@ -82,6 +84,7 @@ object NotificationHelper {
     }
 
     // Show reminder notification
+    @SuppressLint("MissingPermission")
     fun showReminderNotification(
         context: Context,
         notificationId: Int,
@@ -152,7 +155,7 @@ object NotificationHelper {
 
     // Check notification permission
     fun hasNotificationPermission(context: Context): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val hasRuntimePermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.POST_NOTIFICATIONS
@@ -160,6 +163,7 @@ object NotificationHelper {
         } else {
             true
         }
+        return hasRuntimePermission && NotificationManagerCompat.from(context).areNotificationsEnabled()
     }
 
     // Cancel specific notification

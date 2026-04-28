@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -36,6 +37,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.rajsv.exitsense.data.model.SettingsDataStore
 import com.rajsv.exitsense.ui.theme.BackgroundPrimary
@@ -48,7 +50,9 @@ import com.rajsv.exitsense.ui.theme.TextPrimary
 import com.rajsv.exitsense.ui.theme.TextSecondary
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.cos
+import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.random.Random
 
@@ -93,6 +97,7 @@ fun SplashScreen(
     val logoAlpha = remember { Animatable(0f) }
     val textAlpha = remember { Animatable(0f) }
     val taglineAlpha = remember { Animatable(0f) }
+    val taglineOffset = remember { Animatable(20f) }
 
     // Generate particles
     val particles = remember {
@@ -195,14 +200,25 @@ fun SplashScreen(
 
         delay(80)
 
-        // Tagline fades in
-        taglineAlpha.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(
-                durationMillis = 350,
-                easing = FastOutSlowInEasing
+        // Tagline fades in and slides up
+        launch {
+            taglineAlpha.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(
+                    durationMillis = 350,
+                    easing = FastOutSlowInEasing
+                )
             )
-        )
+        }
+        launch {
+            taglineOffset.animateTo(
+                targetValue = 0f,
+                animationSpec = tween(
+                    durationMillis = 350,
+                    easing = FastOutSlowInEasing
+                )
+            )
+        }
 
         // Wait then navigate
         delay(700)
@@ -288,7 +304,9 @@ fun SplashScreen(
                     text = "Smart reminders before you leave",
                     style = ExitSenseTypography.bodyLarge,
                     color = textSecondaryColor,
-                    modifier = Modifier.alpha(taglineAlpha.value)
+                    modifier = Modifier
+                        .alpha(taglineAlpha.value)
+                        .offset { IntOffset(0, taglineOffset.value.roundToInt()) }
                 )
             }
         }

@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -187,7 +188,11 @@ fun ItemsScreen(
                 item {
                     AnimatedVisibility(
                         visible = showContent,
-                        enter = fadeIn(tween(500, delayMillis = 250))
+                        enter = fadeIn(tween(500, delayMillis = 250)) +
+                                scaleIn(
+                                    initialScale = 0.85f,
+                                    animationSpec = tween(400)
+                                )
                     ) {
                         EmptyItemsState(
                             onAddItem = { navController.navigate(Screen.AddItem.route) }
@@ -198,7 +203,11 @@ fun ItemsScreen(
                 item {
                     AnimatedVisibility(
                         visible = showContent,
-                        enter = fadeIn(tween(500, delayMillis = 250))
+                        enter = fadeIn(tween(500, delayMillis = 250)) +
+                                scaleIn(
+                                    initialScale = 0.85f,
+                                    animationSpec = tween(400)
+                                )
                     ) {
                         NoMatchingItemsState()
                     }

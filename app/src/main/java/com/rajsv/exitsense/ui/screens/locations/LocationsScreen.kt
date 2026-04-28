@@ -12,6 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -308,7 +309,11 @@ fun LocationsScreen(
                 item {
                     AnimatedVisibility(
                         visible = showContent,
-                        enter = fadeIn(tween(500, delayMillis = 200))
+                        enter = fadeIn(tween(500, delayMillis = 200)) +
+                                scaleIn(
+                                    initialScale = 0.85f,
+                                    animationSpec = tween(400)
+                                )
                     ) {
                         EmptyLocationsState(
                             onAddLocation = { navController.navigate(Screen.AddLocation.route) }
@@ -317,7 +322,16 @@ fun LocationsScreen(
                 }
             } else if (filteredLocations.isEmpty() && searchQuery.isNotEmpty()) {
                 item {
-                    NoMatchingLocationsState()
+                    AnimatedVisibility(
+                        visible = showContent,
+                        enter = fadeIn(tween(500, delayMillis = 200)) +
+                                scaleIn(
+                                    initialScale = 0.85f,
+                                    animationSpec = tween(400)
+                                )
+                    ) {
+                        NoMatchingLocationsState()
+                    }
                 }
             }
 

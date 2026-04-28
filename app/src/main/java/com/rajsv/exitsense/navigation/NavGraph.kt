@@ -42,9 +42,9 @@ fun NavGraph(
     ) {
         // Splash Screen
         composable(route = Screen.Splash.route) {
-            val loggedIn = isLoggedIn ?: return@composable
             SplashScreen(
                 onNavigateToHome = {
+                    val loggedIn = isLoggedIn ?: return@SplashScreen
                     val destination = if (loggedIn) Screen.Home.route else Screen.Login.route
                     navController.navigate(destination) {
                         popUpTo(Screen.Splash.route) { inclusive = true }

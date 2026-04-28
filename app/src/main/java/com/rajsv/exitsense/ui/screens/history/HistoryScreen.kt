@@ -3,6 +3,7 @@ package com.rajsv.exitsense.ui.screens.history
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -167,7 +168,11 @@ fun HistoryScreen(
                 item {
                     AnimatedVisibility(
                         visible = showContent,
-                        enter = fadeIn(tween(500, delayMillis = 200))
+                        enter = fadeIn(tween(500, delayMillis = 200)) +
+                                scaleIn(
+                                    initialScale = 0.85f,
+                                    animationSpec = tween(400)
+                                )
                     ) {
                         EmptyHistoryState()
                     }
